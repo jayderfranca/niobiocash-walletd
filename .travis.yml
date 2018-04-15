@@ -30,7 +30,7 @@ script:
 # page of your repository and then change the 
 # environment in the settings pannel.
 after_success:
-  - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD ;
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin ;
   - if [[ "${TRAVIS_BRANCH,,}" == "master" ]]; then
       make push ;
     elif [[ "${TRAVIS_BRANCH,,}" == *"-rc"* ]]; then
