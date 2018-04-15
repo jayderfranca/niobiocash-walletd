@@ -1,3 +1,0 @@
-[submodule "daemon"]
-	path = daemon
-	url = https://github.com/kernelits/niobio-node-daemon
