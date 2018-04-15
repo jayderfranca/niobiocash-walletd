@@ -14,11 +14,11 @@ before_install:
 # make docker image
 script:
   - if [[ "${TRAVIS_BRANCH,,}" == "master" ]]; then
-      make build
+      make build ;
     elif [[ "${TRAVIS_BRANCH,,}" == *"-rc"* ]]; then
-      make build -e VERSION="rc"
+      make build -e VERSION="rc" ;
     else
-      make build -e VERSION="${TRAVIS_BRANCH,,}"
+      make build -e VERSION="${TRAVIS_BRANCH,,}" ;
     fi
 
 # only execute the following instructions in
@@ -32,11 +32,11 @@ script:
 after_success:
   - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD ;
   - if [[ "${TRAVIS_BRANCH,,}" == "master" ]]; then
-      make push
+      make push ;
     elif [[ "${TRAVIS_BRANCH,,}" == *"-rc"* ]]; then
-      make push -e VERSION="rc"
+      make push -e VERSION="rc" ;
     else
-      make push -e VERSION="${TRAVIS_BRANCH,,}"
+      make push -e VERSION="${TRAVIS_BRANCH,,}" ;
     fi
 
 # don't notify me when things fail
