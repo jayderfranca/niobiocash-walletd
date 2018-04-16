@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -em
 
 # parse value to boolean
 # if cannot parse, return false
@@ -10,6 +10,9 @@ function bool() {
     return 1
   fi
 }
+
+# supervisord file configuration
+SUPERVISORD_CONF=/etc/supervisord.conf
 
 # binary walletd
 WALLETD=/usr/bin/walletd
@@ -33,12 +36,12 @@ WALLETD_DAEMON_PORT=$(echo "$DAEMON" | cut -d':' -f2)
 WALLETD_DAEMON_PORT=${WALLETD_DAEMON_PORT:-"8314"}
 
 # daemon conf
-DAEMON_DATA=$WALLETD_DATA
-DAEMON_LOG=$DAEMON_DATA/niobiod.log
-DAEMON_P2P_ADDRESS="0.0.0.0"
-DAEMON_P2P_PORT="30264"
-DAEMON_RPC_ADDRESS="0.0.0.0"
-DAEMON_RPC_PORT="40264"
+DAEMOND_DATA=$WALLETD_DATA
+DAEMOND_LOG=$DAEMOND_DATA/niobiod.log
+DAEMOND_P2P_ADDRESS="0.0.0.0"
+DAEMOND_P2P_PORT="30264"
+DAEMOND_RPC_ADDRESS="0.0.0.0"
+DAEMOND_RPC_PORT="40264"
 
 # load secret file with contains wallet address and password
 [ -f $WALLETD_KEY ] && . $WALLETD_KEY
@@ -57,10 +60,14 @@ if [ ! -f $WALLETD_FILE ]; then
 
 fi
 
+# dont show password on command line
+echo "container-file=$WALLETD_FILE" > $WALLETD_DATA/walletd.conf
+echo "container-password=$WALLETD_PASSWORD" >> $WALLETD_DATA/walletd.conf
+
 # get address from wallet
 declare -a WALLETD_GET_PARAMS
-WALLETD_GET_PARAMS[0]="--container-file $WALLETD_FILE"
-WALLETD_GET_PARAMS[1]="--container-password $WALLETD_PASSWORD"
+#WALLETD_GET_PARAMS[0]="--container-file $WALLETD_FILE"
+WALLETD_GET_PARAMS[1]="--config $WALLETD_DATA/walletd.conf"
 WALLETD_GET_PARAMS[2]="--log-file /dev/null"
 WALLETD_GET_PARAMS[3]="--address"
 WALLETD_GET_PARAMS[4]="--log-level 0"
@@ -75,24 +82,24 @@ echo "WALLETD_PASSWORD=$WALLETD_PASSWORD" >> $WALLETD_KEY
 . $WALLETD_KEY
 
 # make command options for daemon
-declare -a DAEMON_RUN_PARAMS
-DAEMON_RUN_PARAMS[0]="--data-dir $DAEMON_DATA"
-DAEMON_RUN_PARAMS[1]="--enable-blockchain-indexes"
-DAEMON_RUN_PARAMS[2]="--restricted-rpc"
-DAEMON_RUN_PARAMS[3]="--log-file $DAEMON_LOG"
-DAEMON_RUN_PARAMS[4]="--p2p-bind-ip $DAEMON_P2P_ADDRESS"
-DAEMON_RUN_PARAMS[5]="--p2p-bind-port $DAEMON_P2P_PORT"
-DAEMON_RUN_PARAMS[6]="--rpc-bind-ip $DAEMON_RPC_ADDRESS"
-DAEMON_RUN_PARAMS[7]="--rpc-bind-port $DAEMON_RPC_PORT"
-DAEMON_RUN_PARAMS[8]="--fee-address $WALLETD_PUBLIC_ADDRESS"
-DAEMON_RUN_PARAMS[9]="--hide-my-port"
-DAEMON_RUN_PARAMS[10]="--testnet"
-DAEMON_RUN_PARAMS[11]="--no-console"
+declare -a DAEMOND_RUN_PARAMS
+DAEMOND_RUN_PARAMS[0]="--data-dir $DAEMOND_DATA"
+DAEMOND_RUN_PARAMS[1]="--enable-blockchain-indexes"
+DAEMOND_RUN_PARAMS[2]="--restricted-rpc"
+DAEMOND_RUN_PARAMS[3]="--log-file $DAEMOND_LOG"
+DAEMOND_RUN_PARAMS[4]="--p2p-bind-ip $DAEMOND_P2P_ADDRESS"
+DAEMOND_RUN_PARAMS[5]="--p2p-bind-port $DAEMOND_P2P_PORT"
+DAEMOND_RUN_PARAMS[6]="--rpc-bind-ip $DAEMOND_RPC_ADDRESS"
+DAEMOND_RUN_PARAMS[7]="--rpc-bind-port $DAEMOND_RPC_PORT"
+DAEMOND_RUN_PARAMS[8]="--fee-address $WALLETD_PUBLIC_ADDRESS"
+DAEMOND_RUN_PARAMS[9]="--hide-my-port"
+DAEMOND_RUN_PARAMS[10]="--testnet"
+DAEMOND_RUN_PARAMS[11]="--no-console"
 
 # make command options for walletd
 declare -a WALLETD_RUN_PARAMS
-WALLETD_RUN_PARAMS[0]="--container-file $WALLETD_FILE"
-WALLETD_RUN_PARAMS[1]="--container-password $WALLETD_PASSWORD"
+#WALLETD_RUN_PARAMS[0]="--container-file $WALLETD_FILE"
+WALLETD_RUN_PARAMS[1]="--config $WALLETD_DATA/walletd.conf"
 WALLETD_RUN_PARAMS[2]="--log-file $WALLETD_LOG"
 WALLETD_RUN_PARAMS[3]="--data-dir $WALLETD_DATA"
 WALLETD_RUN_PARAMS[4]="--bind-address $WALLETD_BIND_ADDRESS"
@@ -102,8 +109,8 @@ WALLETD_RUN_PARAMS[6]="--hide-my-port"
 # is testnet ?
 if bool "$TESTNET"; then
   WALLETD_RUN_PARAMS[7]="--testnet"
-  WALLETD_DAEMON_ADDRESS=$DAEMON_RPC_ADDRESS
-  WALLETD_DAEMON_PORT=$DAEMON_RPC_PORT
+  WALLETD_DAEMON_ADDRESS=$DAEMOND_RPC_ADDRESS
+  WALLETD_DAEMON_PORT=$DAEMOND_RPC_PORT
 fi
 
 # have daemon informed ?
@@ -114,6 +121,61 @@ else
   WALLETD_RUN_PARAMS[10]="--local"
 fi
 
-# start process
-bool "$TESTNET" && $DAEMOND ${DAEMON_RUN_PARAMS[*]} 2>&1 >/dev/null &
-$WALLETD ${WALLETD_RUN_PARAMS[*]} 2>&1 >/dev/null
+# create directory for logging - supervisord
+mkdir -p /var/log/supervisord
+
+# create directory for logging - walletd and daemon
+mkdir -p $WALLETD_DATA/console
+
+# create supervisord configuration
+cat <<EOF >> $SUPERVISORD_CONF
+[unix_http_server]
+file=/tmp/supervisor.sock
+
+[supervisord]
+logfile=/var/log/supervisord/supervisord.log
+logfile_maxbytes=50MB
+logfile_backups=10
+loglevel=error
+pidfile=/var/run/supervisord.pid
+minfds=1024
+minprocs=200
+user=root
+childlogdir=/var/log/supervisord/
+
+[rpcinterface:supervisor]
+supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
+
+[supervisorctl]
+serverurl=unix:///tmp/supervisor.sock
+
+[program:walletd]
+command=$WALLETD ${WALLETD_RUN_PARAMS[*]}
+directory=$WALLETD_DATA
+autostart=true
+autorestart=true
+stderr_logfile=$WALLETD_DATA/console/walletd.errors.log
+stdout_logfile=$WALLETD_DATA/console/walletd.output.log
+priority=200
+EOF
+
+# if is testnet, create a local daemon
+if bool "$TESTNET"; then
+  echo "" >> $SUPERVISORD_CONF
+  echo "[program:daemond]" >> $SUPERVISORD_CONF
+  echo "command=$DAEMOND ${DAEMOND_RUN_PARAMS[*]}" >> $SUPERVISORD_CONF
+  echo "directory=$DAEMOND_DATA" >> $SUPERVISORD_CONF
+  echo "autostart=true" >> $SUPERVISORD_CONF
+  echo "autorestart=true" >> $SUPERVISORD_CONF
+  echo "stderr_logfile=$DAEMOND_DATA/console/niobiod.errors.log" >> $SUPERVISORD_CONF
+  echo "stdout_logfile=$DAEMOND_DATA/console/niobiod.output.log" >> $SUPERVISORD_CONF
+  echo "priority=100" >> $SUPERVISORD_CONF
+fi
+
+# start supervisord
+if [ ! -z "$1" ]; then
+  /usr/local/bin/supervisord --configuration $SUPERVISORD_CONF
+  exec "$@"
+else
+  /usr/local/bin/supervisord --nodaemon --configuration $SUPERVISORD_CONF
+fi

@@ -1,6 +1,6 @@
 TAG ?= dev
 VERSION ?= master
-NAMESPACE ?= kernelits
+NAMESPACE ?= jayderfranca
 IMAGE ?= niobiocash-walletd
 CONTAINER ?= nbr-walletd
 
