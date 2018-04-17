@@ -18,7 +18,7 @@ SUPERVISORD_CONF=/etc/supervisord.conf
 WALLETD=/usr/bin/walletd
 
 # binary daemon
-DAEMOND=/usr/bin/niobiod
+DAEMONL=/usr/bin/niobiod
 
 # walletd conf
 WALLETD_DATA=/niobio
@@ -27,21 +27,19 @@ NEWWALLET_LOG=$WALLETD_DATA/newwallet.log
 WALLETD_KEY=$WALLETD_DATA/walletd.key
 WALLETD_FILE=$WALLETD_DATA/walletd.wallet
 WALLETD_TESTNET=$TESTNET
-WALLETD_BIND_ADDRESS=$(echo "$BIND" | cut -d':' -f1)
-WALLETD_BIND_ADDRESS=${WALLETD_BIND_ADDRESS:-"0.0.0.0"}
-WALLETD_BIND_PORT=$(echo "$BIND" | cut -d':' -f2)
-WALLETD_BIND_PORT=${WALLETD_BIND_PORT:-"20264"}
-WALLETD_DAEMON_ADDRESS=$(echo "$DAEMON" | cut -d':' -f1)
-WALLETD_DAEMON_PORT=$(echo "$DAEMON" | cut -d':' -f2)
-WALLETD_DAEMON_PORT=${WALLETD_DAEMON_PORT:-"8314"}
+WALLETD_BIND_ADDRESS="0.0.0.0"
+WALLETD_BIND_PORT="20264"
+WALLETD_DAEMONR_ADDRESS=$(echo "$DAEMON" | cut -d':' -f1)
+WALLETD_DAEMONR_PORT=$(echo "$DAEMON" | cut -d':' -f2)
+WALLETD_DAEMONR_PORT=${WALLETD_DAEMONR_PORT:-"8314"}
 
 # daemon conf
-DAEMOND_DATA=$WALLETD_DATA
-DAEMOND_LOG=$DAEMOND_DATA/niobiod.log
-DAEMOND_P2P_ADDRESS="0.0.0.0"
-DAEMOND_P2P_PORT="30264"
-DAEMOND_RPC_ADDRESS="0.0.0.0"
-DAEMOND_RPC_PORT="40264"
+DAEMONL_DATA=$WALLETD_DATA
+DAEMONL_LOG=$DAEMONL_DATA/niobiod.log
+DAEMONL_P2P_ADDRESS="0.0.0.0"
+DAEMONL_P2P_PORT="30264"
+DAEMONL_RPC_ADDRESS="0.0.0.0"
+DAEMONL_RPC_PORT="40264"
 
 # load secret file with contains wallet address and password
 [ -f $WALLETD_KEY ] && . $WALLETD_KEY
@@ -82,19 +80,19 @@ echo "WALLETD_PASSWORD=$WALLETD_PASSWORD" >> $WALLETD_KEY
 . $WALLETD_KEY
 
 # make command options for daemon
-declare -a DAEMOND_RUN_PARAMS
-DAEMOND_RUN_PARAMS[0]="--data-dir $DAEMOND_DATA"
-DAEMOND_RUN_PARAMS[1]="--enable-blockchain-indexes"
-DAEMOND_RUN_PARAMS[2]="--restricted-rpc"
-DAEMOND_RUN_PARAMS[3]="--log-file $DAEMOND_LOG"
-DAEMOND_RUN_PARAMS[4]="--p2p-bind-ip $DAEMOND_P2P_ADDRESS"
-DAEMOND_RUN_PARAMS[5]="--p2p-bind-port $DAEMOND_P2P_PORT"
-DAEMOND_RUN_PARAMS[6]="--rpc-bind-ip $DAEMOND_RPC_ADDRESS"
-DAEMOND_RUN_PARAMS[7]="--rpc-bind-port $DAEMOND_RPC_PORT"
-DAEMOND_RUN_PARAMS[8]="--fee-address $WALLETD_PUBLIC_ADDRESS"
-DAEMOND_RUN_PARAMS[9]="--hide-my-port"
-DAEMOND_RUN_PARAMS[10]="--testnet"
-DAEMOND_RUN_PARAMS[11]="--no-console"
+declare -a DAEMONL_RUN_PARAMS
+DAEMONL_RUN_PARAMS[0]="--data-dir $DAEMONL_DATA"
+DAEMONL_RUN_PARAMS[1]="--enable-blockchain-indexes"
+DAEMONL_RUN_PARAMS[2]="--restricted-rpc"
+DAEMONL_RUN_PARAMS[3]="--log-file $DAEMONL_LOG"
+DAEMONL_RUN_PARAMS[4]="--p2p-bind-ip $DAEMONL_P2P_ADDRESS"
+DAEMONL_RUN_PARAMS[5]="--p2p-bind-port $DAEMONL_P2P_PORT"
+DAEMONL_RUN_PARAMS[6]="--rpc-bind-ip $DAEMONL_RPC_ADDRESS"
+DAEMONL_RUN_PARAMS[7]="--rpc-bind-port $DAEMONL_RPC_PORT"
+DAEMONL_RUN_PARAMS[8]="--fee-address $WALLETD_PUBLIC_ADDRESS"
+DAEMONL_RUN_PARAMS[9]="--hide-my-port"
+DAEMONL_RUN_PARAMS[10]="--testnet"
+DAEMONL_RUN_PARAMS[11]="--no-console"
 
 # make command options for walletd
 declare -a WALLETD_RUN_PARAMS
@@ -109,14 +107,14 @@ WALLETD_RUN_PARAMS[6]="--hide-my-port"
 # is testnet ?
 if bool "$TESTNET"; then
   WALLETD_RUN_PARAMS[7]="--testnet"
-  WALLETD_DAEMON_ADDRESS=$DAEMOND_RPC_ADDRESS
-  WALLETD_DAEMON_PORT=$DAEMOND_RPC_PORT
+  WALLETD_DAEMONR_ADDRESS=$DAEMONL_RPC_ADDRESS
+  WALLETD_DAEMONR_PORT=$DAEMONL_RPC_PORT
 fi
 
 # have daemon informed ?
-if [ ! -z "$WALLETD_DAEMON_ADDRESS" ]; then
-  WALLETD_RUN_PARAMS[8]="--daemon-address $WALLETD_DAEMON_ADDRESS"
-  WALLETD_RUN_PARAMS[9]="--daemon-port $WALLETD_DAEMON_PORT"
+if [ ! -z "$WALLETD_DAEMONR_ADDRESS" ]; then
+  WALLETD_RUN_PARAMS[8]="--daemon-address $WALLETD_DAEMONR_ADDRESS"
+  WALLETD_RUN_PARAMS[9]="--daemon-port $WALLETD_DAEMONR_PORT"
 else
   WALLETD_RUN_PARAMS[10]="--local"
 fi
@@ -162,13 +160,13 @@ EOF
 # if is testnet, create a local daemon
 if bool "$TESTNET"; then
   echo "" >> $SUPERVISORD_CONF
-  echo "[program:daemond]" >> $SUPERVISORD_CONF
-  echo "command=$DAEMOND ${DAEMOND_RUN_PARAMS[*]}" >> $SUPERVISORD_CONF
-  echo "directory=$DAEMOND_DATA" >> $SUPERVISORD_CONF
+  echo "[program:DAEMONL]" >> $SUPERVISORD_CONF
+  echo "command=$DAEMONL ${DAEMONL_RUN_PARAMS[*]}" >> $SUPERVISORD_CONF
+  echo "directory=$DAEMONL_DATA" >> $SUPERVISORD_CONF
   echo "autostart=true" >> $SUPERVISORD_CONF
   echo "autorestart=true" >> $SUPERVISORD_CONF
-  echo "stderr_logfile=$DAEMOND_DATA/console/niobiod.errors.log" >> $SUPERVISORD_CONF
-  echo "stdout_logfile=$DAEMOND_DATA/console/niobiod.output.log" >> $SUPERVISORD_CONF
+  echo "stderr_logfile=$DAEMONL_DATA/console/niobiod.errors.log" >> $SUPERVISORD_CONF
+  echo "stdout_logfile=$DAEMONL_DATA/console/niobiod.output.log" >> $SUPERVISORD_CONF
   echo "priority=100" >> $SUPERVISORD_CONF
 fi
 

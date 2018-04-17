@@ -3,7 +3,7 @@ FROM ubuntu:16.04
 ARG VERSION=master
 ENV VERSION=${VERSION}
 
-LABEL maintainer="jayderfranca@gmail.com"
+LABEL maintainer="Jayder França <jayderfranca@gmail.com>"
 LABEL source="https://github.com/niobio-cash/niobio-node-daemon.git"
 LABEL version="${VERSION}"
 
@@ -24,5 +24,11 @@ RUN apt-get update \
  && cd / \
  && rm -fR /tmp/daemon \
  && chmod +x /entrypoint.sh
+
+VOLUME /niobio
+
+EXPOSE 20264/tcp
+EXPOSE 30264/tcp
+EXPOSE 40264/tcp
 
 ENTRYPOINT ["/entrypoint.sh"]
