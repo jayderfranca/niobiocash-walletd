@@ -117,6 +117,8 @@ if [ ! -z "$WALLETD_DAEMONR_ADDRESS" ]; then
   WALLETD_RUN_PARAMS[9]="--daemon-port $WALLETD_DAEMONR_PORT"
 else
   WALLETD_RUN_PARAMS[10]="--local"
+  WALLETD_RUN_PARAMS[11]="--p2p-bind-ip $DAEMONL_P2P_ADDRESS"
+  WALLETD_RUN_PARAMS[12]="--p2p-bind-port $DAEMONL_P2P_PORT"
 fi
 
 # create directory for logging - supervisord
