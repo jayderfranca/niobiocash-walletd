@@ -64,11 +64,10 @@ echo "container-password=$WALLETD_PASSWORD" >> $WALLETD_DATA/walletd.conf
 
 # get address from wallet
 declare -a WALLETD_GET_PARAMS
-#WALLETD_GET_PARAMS[0]="--container-file $WALLETD_FILE"
-WALLETD_GET_PARAMS[1]="--config $WALLETD_DATA/walletd.conf"
-WALLETD_GET_PARAMS[2]="--log-file /dev/null"
-WALLETD_GET_PARAMS[3]="--address"
-WALLETD_GET_PARAMS[4]="--log-level 0"
+WALLETD_GET_PARAMS[0]="--config $WALLETD_DATA/walletd.conf"
+WALLETD_GET_PARAMS[1]="--log-file /dev/null"
+WALLETD_GET_PARAMS[2]="--address"
+WALLETD_GET_PARAMS[3]="--log-level 0"
 WALLETD_PUBLIC_ADDRESS=$($WALLETD ${WALLETD_GET_PARAMS[*]} | grep -i "address" | head -n1 | cut -d':' -f2 | tr -d ' ')
 
 # update key file
@@ -96,29 +95,28 @@ DAEMONL_RUN_PARAMS[11]="--no-console"
 
 # make command options for walletd
 declare -a WALLETD_RUN_PARAMS
-#WALLETD_RUN_PARAMS[0]="--container-file $WALLETD_FILE"
-WALLETD_RUN_PARAMS[1]="--config $WALLETD_DATA/walletd.conf"
-WALLETD_RUN_PARAMS[2]="--log-file $WALLETD_LOG"
-WALLETD_RUN_PARAMS[3]="--data-dir $WALLETD_DATA"
-WALLETD_RUN_PARAMS[4]="--bind-address $WALLETD_BIND_ADDRESS"
-WALLETD_RUN_PARAMS[5]="--bind-port $WALLETD_BIND_PORT"
-WALLETD_RUN_PARAMS[6]="--hide-my-port"
+WALLETD_RUN_PARAMS[0]="--config $WALLETD_DATA/walletd.conf"
+WALLETD_RUN_PARAMS[1]="--log-file $WALLETD_LOG"
+WALLETD_RUN_PARAMS[2]="--data-dir $WALLETD_DATA"
+WALLETD_RUN_PARAMS[3]="--bind-address $WALLETD_BIND_ADDRESS"
+WALLETD_RUN_PARAMS[4]="--bind-port $WALLETD_BIND_PORT"
+WALLETD_RUN_PARAMS[5]="--hide-my-port"
 
 # is testnet ?
 if bool "$TESTNET"; then
-  WALLETD_RUN_PARAMS[7]="--testnet"
+  WALLETD_RUN_PARAMS[6]="--testnet"
   WALLETD_DAEMONR_ADDRESS=$DAEMONL_RPC_ADDRESS
   WALLETD_DAEMONR_PORT=$DAEMONL_RPC_PORT
 fi
 
 # have daemon informed ?
 if [ ! -z "$WALLETD_DAEMONR_ADDRESS" ]; then
-  WALLETD_RUN_PARAMS[8]="--daemon-address $WALLETD_DAEMONR_ADDRESS"
-  WALLETD_RUN_PARAMS[9]="--daemon-port $WALLETD_DAEMONR_PORT"
+  WALLETD_RUN_PARAMS[7]="--daemon-address $WALLETD_DAEMONR_ADDRESS"
+  WALLETD_RUN_PARAMS[8]="--daemon-port $WALLETD_DAEMONR_PORT"
 else
-  WALLETD_RUN_PARAMS[10]="--local"
-  WALLETD_RUN_PARAMS[11]="--p2p-bind-ip $DAEMONL_P2P_ADDRESS"
-  WALLETD_RUN_PARAMS[12]="--p2p-bind-port $DAEMONL_P2P_PORT"
+  WALLETD_RUN_PARAMS[9]="--local"
+  WALLETD_RUN_PARAMS[10]="--p2p-bind-ip $DAEMONL_P2P_ADDRESS"
+  WALLETD_RUN_PARAMS[11]="--p2p-bind-port $DAEMONL_P2P_PORT"
 fi
 
 # create directory for logging - supervisord
