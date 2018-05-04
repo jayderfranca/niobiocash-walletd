@@ -147,7 +147,7 @@ supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
 [supervisorctl]
 serverurl=unix:///tmp/supervisor.sock
 
-[program:walletd]
+[program:wallet]
 command=$WALLETD ${WALLETD_RUN_PARAMS[*]}
 directory=$WALLETD_DATA
 autostart=true
@@ -160,7 +160,7 @@ EOF
 # if is testnet, create a local daemon
 if bool "$TESTNET"; then
   echo "" >> $SUPERVISORD_CONF
-  echo "[program:DAEMONL]" >> $SUPERVISORD_CONF
+  echo "[program:daemon]" >> $SUPERVISORD_CONF
   echo "command=$DAEMONL ${DAEMONL_RUN_PARAMS[*]}" >> $SUPERVISORD_CONF
   echo "directory=$DAEMONL_DATA" >> $SUPERVISORD_CONF
   echo "autostart=true" >> $SUPERVISORD_CONF
