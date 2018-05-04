@@ -54,7 +54,7 @@ if [ ! -f $WALLETD_FILE ]; then
   $WALLETD -w $WALLETD_FILE -p $WALLETD_PASSWORD -l $NEWWALLET_LOG -g 2>&1 >/dev/null
 
   # make backup of original file
-  cp --preserve $WALLETD_FILE $WALLETD_DATA/walletdb.wallet
+  cp --preserve $WALLETD_FILE $WALLETD_DATA/walletd.bkp.wallet
 
 fi
 
@@ -152,8 +152,8 @@ command=$WALLETD ${WALLETD_RUN_PARAMS[*]}
 directory=$WALLETD_DATA
 autostart=true
 autorestart=true
-stderr_logfile=$WALLETD_DATA/console/walletd.errors.log
-stdout_logfile=$WALLETD_DATA/console/walletd.output.log
+stderr_logfile=$WALLETD_DATA/console/wallet.errors.log
+stdout_logfile=$WALLETD_DATA/console/wallet.output.log
 priority=200
 EOF
 
@@ -165,8 +165,8 @@ if bool "$TESTNET"; then
   echo "directory=$DAEMONL_DATA" >> $SUPERVISORD_CONF
   echo "autostart=true" >> $SUPERVISORD_CONF
   echo "autorestart=true" >> $SUPERVISORD_CONF
-  echo "stderr_logfile=$DAEMONL_DATA/console/niobiod.errors.log" >> $SUPERVISORD_CONF
-  echo "stdout_logfile=$DAEMONL_DATA/console/niobiod.output.log" >> $SUPERVISORD_CONF
+  echo "stderr_logfile=$DAEMONL_DATA/console/daemon.errors.log" >> $SUPERVISORD_CONF
+  echo "stdout_logfile=$DAEMONL_DATA/console/daemon.output.log" >> $SUPERVISORD_CONF
   echo "priority=100" >> $SUPERVISORD_CONF
 fi
 
