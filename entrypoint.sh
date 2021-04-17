@@ -126,6 +126,8 @@ mkdir -p /var/log/supervisord
 mkdir -p $WALLETD_DATA/console
 
 # create supervisord configuration
+rm -f $SUPERVISORD_CONF
+
 cat <<EOF >> $SUPERVISORD_CONF
 [unix_http_server]
 file=/tmp/supervisor.sock
