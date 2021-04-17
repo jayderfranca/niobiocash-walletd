@@ -171,9 +171,8 @@ if bool "$TESTNET"; then
 fi
 
 # start supervisord
-if [ ! -z "$1" ]; then
-  /usr/local/bin/supervisord --configuration $SUPERVISORD_CONF
-  exec "$@"
-else
+if [ -z "$1" ]; then
   /usr/local/bin/supervisord --nodaemon --configuration $SUPERVISORD_CONF
 fi
+
+exec "$@"
