@@ -1,6 +1,6 @@
 TAG ?= dev
 VERSION ?= master
-IMAGE ?= niobiocash-walletd
+IMAGE ?= nbr-walletd
 CONTAINER ?= nbr-walletd
 
 .PHONY: build push shell run start stop rm release 
